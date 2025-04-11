@@ -1,5 +1,5 @@
 ---
-- name: Déployer Docker et WordPress
+- name: Déployer Docker et WordPress sur Kali (Debian)
   hosts: kali
   become: yes
 
@@ -11,7 +11,7 @@
     mysql_password: wppassword
 
   tasks:
-    # Installation de Docker
+    # Installation Docker
     - name: Installer les dépendances
       apt:
         name:
@@ -23,22 +23,9 @@
         state: present
         update_cache: yes
 
-    - name: Ajouter la clé GPG Docker
-      apt_key:
-        url: https://download.docker.com/linux/debian/gpg
-        state: present
-
-    - name: Ajouter le dépôt Docker
-      apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
-        state: present
-
-    - name: Installer Docker Engine
+    - name: Installer Docker Engine (docker.io pour Kali)
       apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
+        name: docker.io
         state: present
         update_cache: yes
 
@@ -50,32 +37,33 @@
 
     - name: Ajouter l'utilisateur au groupe docker
       user:
-        name: "{{ ansible_user_id }}"
+        name: "{{ ansible_user }}"
         groups: docker
         append: yes
 
-    - name: Démarrer et activer le service Docker
+    - name: Démarrer et activer Docker
       service:
         name: docker
         state: started
         enabled: yes
 
-    # Déploiement de WordPress
-    - name: Créer le répertoire pour WordPress
+    # Déploiement WordPress
+    - name: Créer le répertoire WordPress
       file:
         path: "{{ wp_dir }}"
         state: directory
         mode: '0755'
 
-    - name: Créer docker-compose.yml
+    - name: Générer le docker-compose.yml
       template:
-        src: docker-compose.yml.j2
+        src: templates/docker-compose.yml.j2
         dest: "{{ wp_dir }}/docker-compose.yml"
         mode: '0644'
 
     - name: Lancer WordPress avec Docker Compose
-      shell: cd {{ wp_dir }} && docker-compose up -d
+      shell: docker-compose up -d
       args:
+        chdir: "{{ wp_dir }}"
         creates: "{{ wp_dir }}/.deployed"
 
     - name: Marquer comme déployé
