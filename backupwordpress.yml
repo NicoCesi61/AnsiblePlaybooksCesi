@@ -1,6 +1,6 @@
 ---
 - name: Sauvegarde de WordPress
-  hosts: ubuntu
+  hosts: kali  # Correction du nom de l'hôte pour Kali Linux
   become: yes
   vars:
     wp_dir: /opt/wordpress
