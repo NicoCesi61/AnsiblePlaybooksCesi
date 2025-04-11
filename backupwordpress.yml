@@ -1,0 +1,23 @@
+---
+- name: Sauvegarde de WordPress
+  hosts: ubuntu
+  become: yes
+  vars:
+    wp_dir: /opt/wordpress
+    backup_dir: /opt/backups
+  tasks:
+    - name: Créer le répertoire de sauvegarde
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Sauvegarde des volumes Docker
+      ansible.builtin.shell: |
+        date_str=$(date +%Y%m%d_%H%M%S)
+        cd {{ wp_dir }}
+        /usr/local/bin/docker-compose stop  # Chemin explicite pour Docker Compose sur Kali
+        tar -czf {{ backup_dir }}/wordpress_backup_${date_str}.tar.gz .
+        /usr/local/bin/docker-compose start  # Chemin explicite pour Docker Compose
+      args:
+        executable: /bin/bash
